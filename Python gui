@@ -1,0 +1,94 @@
+import tkinter as tk
+from tkinter import messagebox
+import mysql.connector
+
+class LoginPage:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Login Page")
+        self.root.geometry("300x150")
+
+        self.username_label = tk.Label(root, text="Username:")
+        self.username_label.pack()
+
+        self.username_entry = tk.Entry(root)
+        self.username_entry.pack()
+
+        self.password_label = tk.Label(root, text="Password:")
+        self.password_label.pack()
+
+        self.password_entry = tk.Entry(root, show="*")
+        self.password_entry.pack()
+
+        self.login_button = tk.Button(root, text="Login", command=self.login)
+        self.login_button.pack()
+
+    def login(self):
+        username = self.username_entry.get()
+        password = self.password_entry.get()
+
+        if username == "user123" and password == "123456":
+            messagebox.showinfo("Success", "Login successful")
+            self.root.destroy()
+            CandidatePage()
+
+        else:
+            messagebox.showerror("Error", "Invalid username or password")
+
+class CandidatePage:
+    def __init__(self):
+        self.root = tk.Tk()
+        self.root.title("Candidate Page")
+        self.root.geometry("300x250")
+
+        labels = ["Name", "Gender", "Class", "Division", "Phone Number", "Email Address"]
+        self.entries = []
+
+        for label_text in labels:
+            label = tk.Label(self.root, text=label_text + ":")
+            label.pack()
+
+            entry = tk.Entry(self.root)
+            entry.pack()
+
+            self.entries.append(entry)
+
+        self.submit_button = tk.Button(self.root, text="Submit", command=self.submit)
+        self.submit_button.pack()
+
+        self.clear_button = tk.Button(self.root, text="Clear", command=self.clear)
+        self.clear_button.pack()
+
+        self.db_connection = mysql.connector.connect(
+            host="your_mysql_host",
+            user="your_mysql_user",
+            password="your_mysql_password",
+            database="your_database_name"
+        )
+
+        self.cursor = self.db_connection.cursor()
+
+    def submit(self):
+        data = [entry.get() for entry in self.entries]
+
+        query = "INSERT INTO candidate_info VALUES (%s, %s, %s, %s, %s, %s)"
+        
+        try:
+            self.cursor.execute(query, data)
+            self.db_connection.commit()
+            messagebox.showinfo("Success", "Submitted successfully. Thank you!")
+        except mysql.connector.Error as err:
+            messagebox.showerror("Error", f"MySQL Error: {err}")
+        
+    def clear(self):
+        for entry in self.entries:
+            entry.delete(0, tk.END)
+
+    def __del__(self):
+        self.cursor.close()
+        self.db_connection.close()
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = LoginPage(root)
+    root.mainloop()
